@@ -1,9 +1,8 @@
-
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useState } from "react";
 
 type User = {
   name: string;
@@ -26,52 +25,53 @@ const categories = [
   { name: "মসলা", emoji: "🌶️", href: "/?category=spices" },
 ];
 
-export default function Navbar({
-  user = null,
-  onSignOut,
-}: NavbarProps) {
+export default function Navbar({ user = null, onSignOut }: NavbarProps) {
   const pathname = usePathname();
-  const [date, setDate] = useState("");
+  const searchParams = useSearchParams();
+
   const [menuOpen, setMenuOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  const [activeCategory, setActiveCategory] = useState("চাল");
+  // Format the current date for Bangladesh.
+  const date = new Intl.DateTimeFormat("bn-BD", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Asia/Dhaka",
+  }).format(new Date());
 
-  useEffect(() => {
-    setDate(
-      new Intl.DateTimeFormat("bn-BD", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-        timeZone: "Asia/Dhaka",
-      }).format(new Date())
-    );
-  }, []);
+  // Read the selected category from the URL.
+  const categoryParam = searchParams.get("category");
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const category = params.get("category");
+  const categoryFromUrl = categories.find(
+    (category) => category.href.split("=")[1] === categoryParam,
+  );
 
-    const selected = categories.find(
-      (item) => item.href.split("=")[1] === category
-    );
+  // Keep the selected category synchronized with navigation.
+  const activeCategory = selectedCategory ?? categoryFromUrl?.name ?? "চাল";
 
-    if (selected) {
-      setActiveCategory(selected.name);
-    }
-  }, [pathname]);
+  // Handle category selection.
+  const handleCategoryClick = (categoryName: string) => {
+    setSelectedCategory(categoryName);
+    setMenuOpen(false);
+  };
+
+  // Determine whether the current page is the homepage.
+  const isHomePage = pathname === "/";
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-100 bg-[#fbfcfa]">
-      {/* Top navbar */}
-      <div className="mx-auto flex min-h-[76px] max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-[70px]">
+      {/* Top Navbar */}
+      <div className="mx-auto flex min-h-19 max-w-360 items-center justify-between px-4 sm:px-6 lg:px-17.5">
         {/* Logo */}
         <Link
           href="/"
           aria-label="বাজার দর হোম"
+          onClick={() => setSelectedCategory(null)}
           className="flex shrink-0 items-center gap-2"
         >
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-green-700 text-2xl sm:h-11 sm:w-11">
+          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-green-700 text-2xl">
             🛒
           </span>
 
@@ -81,18 +81,18 @@ export default function Navbar({
             </span>
 
             <span className="mt-1 text-[10px] font-medium text-gray-600 sm:text-xs">
-              {date || "\u00a0"}
+              {date}
             </span>
           </span>
         </Link>
 
-        {/* Desktop authentication */}
+        {/* Desktop Authentication */}
         <div className="hidden items-center gap-8 sm:flex">
           {user ? (
             <>
               <Link
                 href="/profile"
-                className="flex items-center gap-2 text-sm font-bold text-gray-800 hover:text-green-700"
+                className="flex items-center gap-2 text-sm font-bold text-gray-800 transition hover:text-green-700"
               >
                 {user.avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -106,13 +106,14 @@ export default function Navbar({
                     {user.name.charAt(0).toUpperCase()}
                   </span>
                 )}
+
                 {user.name}
               </Link>
 
               <button
                 type="button"
                 onClick={onSignOut}
-                className="rounded-xl border border-gray-200 px-5 py-3 text-sm font-bold text-gray-800 hover:bg-gray-100"
+                className="rounded-xl border border-gray-200 px-5 py-3 text-sm font-bold text-gray-800 transition hover:bg-gray-100"
               >
                 সাইন আউট
               </button>
@@ -136,10 +137,10 @@ export default function Navbar({
           )}
         </div>
 
-        {/* Mobile menu button */}
+        {/* Mobile Menu Button */}
         <button
           type="button"
-          onClick={() => setMenuOpen(!menuOpen)}
+          onClick={() => setMenuOpen((previous) => !previous)}
           aria-label={menuOpen ? "মেনু বন্ধ করুন" : "মেনু খুলুন"}
           aria-expanded={menuOpen}
           className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 text-2xl text-gray-800 sm:hidden"
@@ -148,20 +149,17 @@ export default function Navbar({
         </button>
       </div>
 
-      {/* Desktop categories */}
-      <nav
-        aria-label="পণ্যের বিভাগ"
-        className="border-t border-gray-100"
-      >
-        <div className="mx-auto hidden max-w-[1440px] items-center gap-2 overflow-x-auto px-4 py-2 sm:flex sm:px-6 lg:gap-3 lg:px-[70px]">
+      {/* Desktop Categories */}
+      <nav aria-label="পণ্যের বিভাগ" className="border-t border-gray-100">
+        <div className="mx-auto hidden max-w-360 items-center gap-2 overflow-x-auto px-4 py-2 sm:flex sm:px-6 lg:gap-3 lg:px-17.5">
           {categories.map((category) => {
-            const isActive = activeCategory === category.name;
+            const isActive = isHomePage && activeCategory === category.name;
 
             return (
               <Link
                 key={category.name}
                 href={category.href}
-                onClick={() => setActiveCategory(category.name)}
+                onClick={() => handleCategoryClick(category.name)}
                 aria-current={isActive ? "page" : undefined}
                 className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition ${
                   isActive
@@ -177,7 +175,7 @@ export default function Navbar({
         </div>
       </nav>
 
-      {/* Mobile menu */}
+      {/* Mobile Menu */}
       {menuOpen && (
         <div className="border-t border-gray-100 bg-white px-4 py-4 shadow-md sm:hidden">
           <nav
@@ -185,30 +183,28 @@ export default function Navbar({
             className="grid grid-cols-2 gap-2"
           >
             {categories.map((category) => {
-              const isActive = activeCategory === category.name;
+              const isActive = isHomePage && activeCategory === category.name;
 
               return (
                 <Link
                   key={category.name}
                   href={category.href}
-                  onClick={() => {
-                    setActiveCategory(category.name);
-                    setMenuOpen(false);
-                  }}
-                  className={`flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-semibold ${
+                  onClick={() => handleCategoryClick(category.name)}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-semibold transition ${
                     isActive
                       ? "bg-green-100 text-green-800"
                       : "bg-gray-50 text-gray-700 hover:bg-green-50"
                   }`}
                 >
                   <span>{category.emoji}</span>
-                  {category.name}
+                  <span>{category.name}</span>
                 </Link>
               );
             })}
           </nav>
 
-          {/* Mobile authentication */}
+          {/* Mobile Authentication */}
           <div className="mt-4 flex gap-3 border-t border-gray-100 pt-4">
             {user ? (
               <>
@@ -244,7 +240,7 @@ export default function Navbar({
                 <Link
                   href="/sign-up"
                   onClick={() => setMenuOpen(false)}
-                  className="flex-1 rounded-lg bg-green-700 px-3 py-2.5 text-center text-sm font-bold text-white"
+                  className="flex-1 rounded-lg bg-green-700 px-3 py-2.5 text-center text-sm font-bold text-white transition hover:bg-green-800"
                 >
                   সাইন আপ
                 </Link>
@@ -256,3 +252,17 @@ export default function Navbar({
     </header>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
