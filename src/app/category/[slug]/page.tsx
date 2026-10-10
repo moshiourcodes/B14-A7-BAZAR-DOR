@@ -1,12 +1,10 @@
-
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
-const API_URL =
-  "https://openapi.programming-hero.com/api/bazardor";
+const API_URL = "https://openapi.programming-hero.com/api/bazardor";
 
 type Category = {
   slug?: string;
@@ -92,23 +90,18 @@ function ProductCard({ product }: { product: Product }) {
         ? "bg-green-50 text-green-700"
         : "bg-[#EFF3EF] text-[#202922]";
 
-  const arrow =
-    direction === "up" ? "▲" : direction === "down" ? "▼" : "—";
+  const arrow = direction === "up" ? "▲" : direction === "down" ? "▼" : "—";
 
   return (
     <article className="rounded-[20px] border border-[#DCE5DD] bg-[#FAFCFA] p-5 transition hover:shadow-md">
       <div className="flex items-center gap-4">
-        <div className="flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-2xl bg-[#EFF3EF] text-3xl">
+        <div className="flex h-14.5 w-14.5 shrink-0 items-center justify-center rounded-2xl bg-[#EFF3EF] text-3xl">
           {product.image || product.categoryIcon || "🛒"}
         </div>
 
         <div>
-          <h2 className="font-bold text-[#202922]">
-            {product.nameBn}
-          </h2>
-          <p className="mt-1 text-sm text-[#68716A]">
-            প্রতি {product.unit}
-          </p>
+          <h2 className="font-bold text-[#202922]">{product.nameBn}</h2>
+          <p className="mt-1 text-sm text-[#68716A]">প্রতি {product.unit}</p>
         </div>
       </div>
 
@@ -126,13 +119,6 @@ function ProductCard({ product }: { product: Product }) {
           {arrow} {change}%
         </span>
       </div>
-
-      <Link
-        href={`/product/${product.slug}`}
-        className="mt-4 inline-block text-sm font-semibold text-[#07883D] hover:underline"
-      >
-        বিস্তারিত দেখুন →
-      </Link>
     </article>
   );
 }
@@ -162,13 +148,10 @@ export default function CategoryPage() {
             signal: controller.signal,
             cache: "no-store",
           }),
-          fetch(
-            `${API_URL}/products?category=${encodeURIComponent(slug)}`,
-            {
-              signal: controller.signal,
-              cache: "no-store",
-            }
-          ),
+          fetch(`${API_URL}/products?category=${encodeURIComponent(slug)}`, {
+            signal: controller.signal,
+            cache: "no-store",
+          }),
         ]);
 
         if (!categoryResponse.ok || !productResponse.ok) {
@@ -224,15 +207,13 @@ export default function CategoryPage() {
     return result;
   }, [products, sort]);
 
-  const title =
-    category?.nameBn || category?.name || slug;
+  const title = category?.nameBn || category?.name || slug;
 
   const icon = category?.icon || category?.emoji || "🛒";
 
   return (
     <main className="min-h-screen bg-[#F0F5F0] px-4 py-6 sm:px-8">
-      <div className="mx-auto max-w-[1375px]">
-        {/* Category title */}
+      <div className="mx-auto max-w-343.75">
         <header className="mb-7 flex items-center gap-4 rounded-[20px] border border-[#DCE5DD] bg-[#FAFCFA] p-5 sm:p-7">
           <span className="text-4xl" aria-hidden="true">
             {icon}
@@ -251,20 +232,16 @@ export default function CategoryPage() {
           </div>
         </header>
 
-        {/* Sort control */}
         <div className="mb-5 flex justify-end rounded-[20px] border border-[#DCE5DD] bg-[#FAFCFA] p-4">
           <label
             htmlFor="sort"
             className="flex items-center gap-3 text-sm text-[#68716A]"
           >
             সাজান
-
             <select
               id="sort"
               value={sort}
-              onChange={(event) =>
-                setSort(event.target.value as SortType)
-              }
+              onChange={(event) => setSort(event.target.value as SortType)}
               disabled={loading || error}
               className="rounded-xl border border-[#D0D7D0] bg-white px-3 py-2.5 text-[#202922] outline-none focus:border-[#07883D]"
             >
@@ -275,10 +252,8 @@ export default function CategoryPage() {
           </label>
         </div>
 
-        {/* Loading */}
         {loading && <ProductSkeleton />}
 
-        {/* Error state */}
         {!loading && error && (
           <div className="rounded-[20px] border border-[#DCE5DD] bg-[#FAFCFA] px-5 py-16 text-center">
             <h2 className="text-2xl font-bold text-[#202922]">
@@ -296,7 +271,6 @@ export default function CategoryPage() {
           </div>
         )}
 
-        {/* Empty state */}
         {!loading && !error && products.length === 0 && (
           <div className="rounded-[20px] border border-[#DCE5DD] bg-[#FAFCFA] px-5 py-16 text-center">
             <p className="text-5xl">🔎</p>
@@ -315,12 +289,11 @@ export default function CategoryPage() {
           </div>
         )}
 
-        {/* Product cards */}
         {!loading && !error && products.length > 0 && (
           <>
             <p className="mb-5 text-sm text-[#68716A]">
-              মোট {sortedProducts.length.toLocaleString("bn-BD")}টি
-              পণ্য দেখানো হচ্ছে
+              মোট {sortedProducts.length.toLocaleString("bn-BD")}টি পণ্য দেখানো
+              হচ্ছে
             </p>
 
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -334,19 +307,3 @@ export default function CategoryPage() {
     </main>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

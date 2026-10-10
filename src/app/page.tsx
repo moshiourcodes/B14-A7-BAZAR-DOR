@@ -1,9 +1,11 @@
 import Hero from "./components/Hero";
+import ProductSection from "./components/ProductSection";
 
 export default function HomePage() {
   return (
     <>
       <Hero />
+      <ProductSection></ProductSection>
 
       <section
         id="সর্ব-পণ্য"
