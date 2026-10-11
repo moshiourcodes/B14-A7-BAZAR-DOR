@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 const API_URL = "https://openapi.programming-hero.com/api/bazardor/products";
 
@@ -207,8 +208,7 @@ function ProductVisual({ product }: { product: Product }) {
   return (
     <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#F0F5F0] text-2xl">
       {isImage ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <Image
           src={icon}
           alt={getName(product)}
           className="h-full w-full object-contain p-1"
@@ -442,18 +442,13 @@ export default function ProductSection() {
 
         <ProductGrid title="আজ দাম কমেছে" products={fallers} direction="down" />
 
-     
-<section
-  id="সকল-পণ্য"
-  className="scroll-mt-24"
->
-  <ProductGrid
-    title="সব পণ্য"
-    products={products}
-    subtitle={`মোট ${formatPrice(products.length)}টি পণ্য দেখানো হচ্ছে`}
-  />
-</section>
-
+        <section id="সকল-পণ্য" className="scroll-mt-24">
+          <ProductGrid
+            title="সব পণ্য"
+            products={products}
+            subtitle={`মোট ${formatPrice(products.length)}টি পণ্য দেখানো হচ্ছে`}
+          />
+        </section>
       </div>
     </main>
   );

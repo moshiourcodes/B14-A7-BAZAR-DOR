@@ -97,7 +97,6 @@ export default function PriceTicker() {
     );
   }
 
-  // Duplicate items for continuous scrolling.
   const tickerItems = [...products, ...products];
 
   return (
