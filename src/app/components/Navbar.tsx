@@ -218,6 +218,8 @@ export default function Navbar() {
               >
                 {session.user.image ? (
                   <Image
+                  width={20}
+                  height={20}
                     src={session.user.image}
                     alt="Profile"
                     className="h-18 w-18 rounded-[22px] object-cover"
@@ -441,7 +443,6 @@ export default function Navbar() {
           </div>
         </div>
       )}
-
       <PriceTicker />
     </header>
   );

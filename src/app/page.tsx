@@ -1,10 +1,12 @@
 import Hero from "./components/Hero";
-import ProductSection from "./components/ProductSection";
+import ProductSection from "./components/ProductCard";
+import ProductCard from "./components/ProductCard"
 
 export default function HomePage() {
   return (
     <>
       <Hero />
+      <ProductCard></ProductCard>
       <ProductSection></ProductSection>
 
       <section
@@ -14,6 +16,12 @@ export default function HomePage() {
     </>
   );
 }
+
+
+
+
+
+
 
 
 

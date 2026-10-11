@@ -10,19 +10,16 @@ type Product = {
   id?: string | number;
   _id?: string | number;
   slug?: string;
-
   name?: string;
   nameBn?: string;
   name_bn?: string;
   title?: string;
-
   icon?: string;
   emoji?: string;
   image?: string;
   imageUrl?: string;
   image_url?: string;
   thumbnail?: string;
-
   unit?: string;
   price?: number | string;
   today?: number | string;
@@ -30,13 +27,11 @@ type Product = {
   today_price?: number | string;
   currentPrice?: number | string;
   current_price?: number | string;
-
   change?: unknown;
   changePercent?: number | string;
   change_percent?: number | string;
   changeDirection?: string;
   change_direction?: string;
-
   [key: string]: unknown;
 };
 
@@ -44,7 +39,6 @@ type Direction = "up" | "down" | "flat";
 
 function getProducts(value: unknown): Product[] {
   if (Array.isArray(value)) return value as Product[];
-
   if (!value || typeof value !== "object") return [];
 
   const obj = value as Record<string, unknown>;
@@ -52,13 +46,11 @@ function getProducts(value: unknown): Product[] {
   for (const key of ["data", "products", "result", "items"]) {
     const nested = obj[key];
 
-    if (Array.isArray(nested)) {
-      return nested as Product[];
-    }
+    if (Array.isArray(nested)) return nested as Product[];
 
     if (nested && typeof nested === "object") {
-      const found = getProducts(nested);
-      if (found.length) return found;
+      const result = getProducts(nested);
+      if (result.length) return result;
     }
   }
 
@@ -72,14 +64,14 @@ function firstValue(...values: unknown[]): unknown {
 }
 
 function getName(product: Product): string {
-  const value = firstValue(
+  const name = firstValue(
     product.nameBn,
     product.name_bn,
     product.name,
     product.title,
   );
 
-  return typeof value === "string" ? value : "পণ্য";
+  return typeof name === "string" ? name : "পণ্য";
 }
 
 function toNumber(value: unknown): number {
@@ -137,6 +129,7 @@ function getChangeValue(product: Product): number {
 
 function getDirection(product: Product): Direction {
   const change = product.change;
+
   let rawDirection: unknown = firstValue(
     product.changeDirection,
     product.change_direction,
@@ -183,9 +176,13 @@ function formatPrice(value: number): string {
 }
 
 function getProductHref(product: Product): string {
-  const id = firstValue(product.slug, product.id, product._id);
+  const id = product.id ?? product._id ?? product.slug;
 
-  return id !== undefined ? `/product/${encodeURIComponent(String(id))}` : "/";
+  if (id === undefined || id === null || id === "") {
+    return "/";
+  }
+
+  return `/product/${encodeURIComponent(String(id))}`;
 }
 
 function ProductVisual({ product }: { product: Product }) {
@@ -207,12 +204,20 @@ function ProductVisual({ product }: { product: Product }) {
 
   return (
     <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#F0F5F0] text-2xl">
-      {isImage ? (
+      {isImage && !icon.startsWith("data:image/") ? (
         <Image
           src={icon}
           alt={getName(product)}
+          width={48}
+          height={48}
           className="h-full w-full object-contain p-1"
-          loading="lazy"
+        />
+      ) : icon.startsWith("data:image/") ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={icon}
+          alt={getName(product)}
+          className="h-full w-full object-contain p-1"
         />
       ) : icon ? (
         <span>{icon}</span>
@@ -247,6 +252,7 @@ function ProductCard({ product }: { product: Product }) {
           <h3 className="truncate text-base font-bold text-[#26332B]">
             {getName(product)}
           </h3>
+
           <p className="mt-0.5 text-xs text-[#667168]">
             {typeof product.unit === "string" && product.unit
               ? `প্রতি ${product.unit}`
@@ -258,6 +264,7 @@ function ProductCard({ product }: { product: Product }) {
       <div className="mt-4 flex items-end justify-between gap-2">
         <div>
           <p className="text-xs text-[#667168]">আজকের দাম</p>
+
           <p className="mt-0.5 text-lg font-bold text-[#26332B]">
             {formatPrice(price)} টাকা
           </p>
@@ -289,7 +296,9 @@ function ProductGrid({
     <section className="mb-10">
       <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-[#26332B]">
         {direction === "up" && <span className="text-[#D93636]">▲</span>}
+
         {direction === "down" && <span className="text-[#159447]">▼</span>}
+
         {title}
       </h2>
 
@@ -321,6 +330,7 @@ export default function ProductSection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Fetch data without setting loading state synchronously here.
   const loadProducts = useCallback(async () => {
     try {
       const response = await fetch(API_URL, {
@@ -349,6 +359,7 @@ export default function ProductSection() {
     }
   }, []);
 
+  // The effect only starts the request.
   useEffect(() => {
     let cancelled = false;
 
@@ -393,9 +404,16 @@ export default function ProductSection() {
     };
   }, []);
 
+  // Loading starts only after the user clicks Retry.
+  const handleRetry = () => {
+    setLoading(true);
+    setError("");
+    void loadProducts();
+  };
+
   if (loading) {
     return (
-      <section className="mx-auto w-full max-w-360 px-5 py-10 sm:px-8 lg:px-12">
+      <section className="mx-auto w-full max-w-7xl px-5 py-10 sm:px-8 lg:px-12">
         <p className="text-center text-[#667168]">পণ্যের তথ্য লোড হচ্ছে...</p>
       </section>
     );
@@ -403,7 +421,7 @@ export default function ProductSection() {
 
   if (error) {
     return (
-      <section className="mx-auto w-full max-w-360 px-5 py-10 sm:px-8 lg:px-12">
+      <section className="mx-auto w-full max-w-7xl px-5 py-10 sm:px-8 lg:px-12">
         <div className="rounded-2xl border border-red-200 bg-white p-6 text-center">
           <p role="alert" className="wrap-break-word text-sm text-red-600">
             পণ্যের তথ্য লোড করা যায়নি: {error}
@@ -411,11 +429,7 @@ export default function ProductSection() {
 
           <button
             type="button"
-            onClick={() => {
-              setLoading(true);
-              setError("");
-              void loadProducts();
-            }}
+            onClick={handleRetry}
             className="mt-4 rounded-lg bg-green-700 px-5 py-2 text-sm font-semibold text-white hover:bg-green-800"
           >
             আবার চেষ্টা করো
@@ -437,7 +451,7 @@ export default function ProductSection() {
 
   return (
     <main className="w-full bg-[#F0F5F0]">
-      <div className="mx-auto w-full max-w-360 px-5 py-8 sm:px-8 lg:px-12">
+      <div className="mx-auto w-full max-w-7xl px-5 py-8 sm:px-8 lg:px-12">
         <ProductGrid title="আজ দাম বেড়েছে" products={risers} direction="up" />
 
         <ProductGrid title="আজ দাম কমেছে" products={fallers} direction="down" />

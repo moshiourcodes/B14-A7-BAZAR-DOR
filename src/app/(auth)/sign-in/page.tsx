@@ -2,19 +2,37 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 
+type SocialProvider = "google" | "github";
+
+function getSafeCallbackURL(requestedURL: string | null): string {
+  if (
+    requestedURL &&
+    requestedURL.startsWith("/") &&
+    !requestedURL.startsWith("//") &&
+    !requestedURL.includes("\\")
+  ) {
+    return requestedURL;
+  }
+
+  return "/profile";
+}
+
 export default function SignInPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const callbackURL = getSafeCallbackURL(searchParams.get("callbackURL"));
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [socialLoading, setSocialLoading] = useState<
-    "google" | "github" | null
-  >(null);
+  const [socialLoading, setSocialLoading] = useState<SocialProvider | null>(
+    null,
+  );
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -30,7 +48,7 @@ export default function SignInPage() {
       const { error } = await authClient.signIn.email({
         email: email.trim(),
         password,
-        callbackURL: "/profile",
+        callbackURL,
       });
 
       if (error) {
@@ -40,7 +58,8 @@ export default function SignInPage() {
 
       toast.success("সফলভাবে সাইন ইন হয়েছে!");
 
-      router.push("/profile");
+      // Go back to the requested product or profile page.
+      router.replace(callbackURL);
       router.refresh();
     } catch {
       toast.error("একটি সমস্যা হয়েছে। আবার চেষ্টা করুন।");
@@ -49,13 +68,13 @@ export default function SignInPage() {
     }
   };
 
-  const handleSocialLogin = async (provider: "google" | "github") => {
+  const handleSocialLogin = async (provider: SocialProvider) => {
     setSocialLoading(provider);
 
     try {
       const { error } = await authClient.signIn.social({
         provider,
-        callbackURL: "/profile",
+        callbackURL,
       });
 
       if (error) {
@@ -67,6 +86,8 @@ export default function SignInPage() {
       setSocialLoading(null);
     }
   };
+
+  const isBusy = loading || socialLoading !== null;
 
   return (
     <main className="min-h-screen bg-[#F0F5F0] px-4 py-8 text-[#263329] sm:py-12">
@@ -94,7 +115,7 @@ export default function SignInPage() {
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 required
-                disabled={loading || socialLoading !== null}
+                disabled={isBusy}
                 className="h-10 w-full rounded-lg border border-[#DCE5DD] bg-transparent px-3 text-sm outline-none transition placeholder:text-[#89928B] focus:border-[#008A43] focus:ring-2 focus:ring-[#008A43]/10 disabled:opacity-60"
               />
             </div>
@@ -115,14 +136,14 @@ export default function SignInPage() {
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 required
-                disabled={loading || socialLoading !== null}
+                disabled={isBusy}
                 className="h-10 w-full rounded-lg border border-[#DCE5DD] bg-transparent px-3 text-sm outline-none transition placeholder:text-[#89928B] focus:border-[#008A43] focus:ring-2 focus:ring-[#008A43]/10 disabled:opacity-60"
               />
             </div>
 
             <button
               type="submit"
-              disabled={loading || socialLoading !== null}
+              disabled={isBusy}
               className="flex h-10 w-full items-center justify-center rounded-lg bg-[#008A43] text-sm font-semibold text-white shadow-[0_3px_0_#006C34] transition hover:bg-[#00783A] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? "সাইন ইন হচ্ছে..." : "সাইন ইন"}
@@ -138,11 +159,12 @@ export default function SignInPage() {
             <div className="h-px flex-1 bg-[#DCE5DD]" />
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          {/* Social login buttons */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <button
               type="button"
               onClick={() => handleSocialLogin("google")}
-              disabled={loading || socialLoading !== null}
+              disabled={isBusy}
               className="flex h-10 items-center justify-center gap-2 rounded-lg border border-[#DCE5DD] px-2 text-sm font-semibold transition hover:bg-[#F0F5F0] disabled:cursor-not-allowed disabled:opacity-60"
             >
               <span
@@ -162,7 +184,7 @@ export default function SignInPage() {
             <button
               type="button"
               onClick={() => handleSocialLogin("github")}
-              disabled={loading || socialLoading !== null}
+              disabled={isBusy}
               className="flex h-10 items-center justify-center gap-2 rounded-lg border border-[#DCE5DD] px-2 text-sm font-semibold transition hover:bg-[#F0F5F0] disabled:cursor-not-allowed disabled:opacity-60"
             >
               <svg
