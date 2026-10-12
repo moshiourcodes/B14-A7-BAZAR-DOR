@@ -1,12 +1,24 @@
 import Image from "next/image";
 
+function getCurrentDate(): string {
+  return new Intl.DateTimeFormat("bn-BD", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Asia/Dhaka",
+  }).format(new Date());
+}
+
 export default function Hero() {
+  const currentDate = getCurrentDate();
+
   return (
     <main className="bg-[#F0F5F0]">
       <section className="mx-auto grid min-h-86.25 max-w-343.75 grid-cols-1 items-center gap-6 overflow-hidden rounded-[30px] border border-[#DCE5DD] bg-[#FAFCFA] px-5 py-8 sm:px-8 md:grid-cols-[1fr_320px] md:px-10 lg:px-12">
         <div className="flex flex-col items-start">
           <p className="mb-4 rounded-full bg-[#E1F1E6] px-4 py-1.5 text-sm font-medium text-[#07883D] sm:text-base">
-            শনিবার, ১০ অক্টোবর, ২০২৬
+            {currentDate}
           </p>
 
           <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-[#202922] sm:text-4xl lg:text-[42px]">

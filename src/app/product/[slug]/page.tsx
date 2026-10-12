@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { headers } from "next/headers";
+import { notFound, redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
 
 const API_URL = "https://openapi.programming-hero.com/api/bazardor";
 
@@ -68,7 +70,6 @@ async function getProduct(id: string): Promise<Product | null> {
     }
 
     const result: unknown = await response.json();
-
     return extractProduct(result);
   } catch (error) {
     console.error("Product API error:", error);
@@ -76,13 +77,13 @@ async function getProduct(id: string): Promise<Product | null> {
   }
 }
 
-function formatPrice(value: number) {
+function formatPrice(value: number): string {
   return new Intl.NumberFormat("bn-BD", {
     maximumFractionDigits: 2,
   }).format(value);
 }
 
-function getName(product: Product) {
+function getName(product: Product): string {
   return (
     product.nameBn ??
     product.name_bn ??
@@ -92,7 +93,7 @@ function getName(product: Product) {
   );
 }
 
-function getCategory(product: Product) {
+function getCategory(product: Product): string {
   if (typeof product.category === "object" && product.category) {
     return (
       product.category.nameBn ??
@@ -111,7 +112,7 @@ function getCategory(product: Product) {
   );
 }
 
-function getUnit(unit?: string) {
+function getUnit(unit?: string): string {
   const units: Record<string, string> = {
     kg: "প্রতি কেজি",
     liter: "প্রতি লিটার",
@@ -125,7 +126,7 @@ function getUnit(unit?: string) {
   return units[unit?.toLowerCase() ?? ""] ?? unit ?? "প্রতি ইউনিট";
 }
 
-function getMarketAverage(market: Market) {
+function getMarketAverage(market: Market): number {
   return (Number(market.min) + Number(market.max)) / 2;
 }
 
@@ -135,6 +136,17 @@ export default async function ProductDetailsPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+
+  
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+ 
+  if (!session) {
+    redirect(`/sign-in?callbackURL=${encodeURIComponent(`/product/${slug}`)}`);
+  }
+
   const product = await getProduct(slug);
 
   if (!product) {
@@ -174,7 +186,7 @@ export default async function ProductDetailsPage({
   return (
     <main className="min-h-screen bg-[#f0f5f0] px-4 py-6 text-[#263329] sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-7xl">
-        {/* Breadcrumb */}
+        
         <nav
           aria-label="Breadcrumb"
           className="mb-8 flex flex-wrap items-center gap-2 text-sm text-gray-500"
@@ -188,7 +200,7 @@ export default async function ProductDetailsPage({
           <Link
             href={
               typeof product.category === "string"
-                ? `/category/${product.category}`
+                ? `/category/${encodeURIComponent(product.category)}`
                 : "/"
             }
             className="transition hover:text-green-700"
@@ -204,8 +216,19 @@ export default async function ProductDetailsPage({
         {/* Product summary */}
         <section className="mb-6 flex flex-col justify-between gap-6 rounded-3xl border border-[#dfe7de] bg-[#fbfcfa] p-5 sm:p-7 lg:flex-row lg:items-center">
           <div className="flex min-w-0 items-start gap-4 sm:items-center">
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-[#f0f4ee] text-4xl">
-              {product.image || product.categoryIcon || "🛒"}
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#f0f4ee] text-4xl">
+              {product.image &&
+              (/^https?:\/\//i.test(product.image) ||
+                product.image.startsWith("/")) ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={product.image}
+                  alt={productName}
+                  className="h-full w-full object-contain p-2"
+                />
+              ) : (
+                product.image || product.categoryIcon || "🛒"
+              )}
             </div>
 
             <div className="min-w-0">
@@ -256,7 +279,6 @@ export default async function ProductDetailsPage({
           <h2 className="mb-5 text-xl font-extrabold">দামের সারসংক্ষেপ</h2>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {/* Minimum price */}
             <div className="rounded-2xl bg-[#f0f4ee] p-5 sm:p-6">
               <p className="text-sm text-gray-500">সর্বনিম্ন দাম</p>
 
@@ -270,7 +292,6 @@ export default async function ProductDetailsPage({
               </p>
             </div>
 
-            {/* Maximum price */}
             <div className="rounded-2xl bg-[#f0f4ee] p-5 sm:p-6">
               <p className="text-sm text-gray-500">সর্বাধিক দাম</p>
 
@@ -284,7 +305,6 @@ export default async function ProductDetailsPage({
               </p>
             </div>
 
-            {/* Average price */}
             <div className="rounded-2xl bg-[#f0f4ee] p-5 sm:p-6">
               <p className="text-sm text-gray-500">গড় দাম</p>
 
@@ -332,7 +352,7 @@ export default async function ProductDetailsPage({
                 <tbody>
                   {markets.map((market, index) => (
                     <tr
-                      key={`${market.market}-${market.division}`}
+                      key={`${market.market}-${market.division}-${index}`}
                       className={
                         index % 2 === 0
                           ? "border-t border-[#e4e9e2] bg-[#fbfcfa]"

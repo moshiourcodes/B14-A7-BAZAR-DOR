@@ -10,8 +10,6 @@ export default function Footer() {
           সকল দাম সম্ভাব্য; বাজার অবস্থার উপর নির্ভর করে পরিবর্তিত হয়।
         </p>
       </div>
-
-      
-    </footer>
+      </footer>
   );
 }
