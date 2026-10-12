@@ -222,6 +222,8 @@ export default async function ProductDetailsPage({
                 product.image.startsWith("/")) ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
+                width={20}
+                height={20}
                   src={product.image}
                   alt={productName}
                   className="h-full w-full object-contain p-2"

@@ -198,6 +198,14 @@ export default function SignUpPage() {
             <div className="h-px flex-1 bg-[#DFE8E0]" />
           </div>
 
+
+
+{/* goggle */}
+
+
+
+
+
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <button
               type="button"
@@ -215,6 +223,10 @@ export default function SignUpPage() {
                 ? "চালু হচ্ছে..."
                 : "Google দিয়ে চালিয়ে যান"}
             </button>
+
+
+{/*  github */}
+
 
             <button
               type="button"
